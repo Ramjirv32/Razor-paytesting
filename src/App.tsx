@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 
-// Razorpay declaration to fix TS2339 error
+
 declare global {
 interface Window {
 Razorpay: any;
@@ -23,7 +23,8 @@ currency: 'INR',
 name: 'Test Razorpay',
 description: 'Test Transaction',
 order_id: data.id,
-handler: (response) => {
+handler: (response: any) => {
+console.log(response); // Use the response to avoid unused variable warning
 alert('Payment Success!');
 navigate('/home');
 },
