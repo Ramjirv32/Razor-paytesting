@@ -18,12 +18,21 @@ interface RazorpayResponse {
 function PaymentPage() {
   const navigate = useNavigate()
 
+  // Your ngrok URL
+  const BACKEND_URL = "https://bluegill-resolved-marginally.ngrok-free.app"
+
   const checkPaymentStatus = async (orderId: string) => {
     let retries = 10
     while (retries > 0) {
       try {
-        // Use localhost:5000 directly since we're in development
-        const res = await fetch(`http://localhost:5000/check-status/${orderId}`)
+        const res = await fetch(`${BACKEND_URL}/check-status/${orderId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
+          },
+        })
+
         if (!res.ok) throw new Error("Failed to fetch payment status")
         const data = await res.json()
         if (data.status === "paid") {
@@ -31,7 +40,7 @@ function PaymentPage() {
           navigate("/home")
           return
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error checking payment status:", error)
       }
       await new Promise((r) => setTimeout(r, 2000)) // wait 2s
@@ -42,16 +51,23 @@ function PaymentPage() {
 
   const handlePayment = async () => {
     try {
-      // Use localhost:5000 directly since we're in development
-      const res = await fetch(`http://localhost:5000/create-order`, {
+      console.log("Creating order with backend:", BACKEND_URL)
+
+      const res = await fetch(`${BACKEND_URL}/create-order`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true", // Skip ngrok browser warning
         },
       })
 
-      if (!res.ok) throw new Error("Failed to create order")
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(`Failed to create order: ${res.status} - ${errorText}`)
+      }
+
       const data = await res.json()
+      console.log("Order created:", data)
 
       // Use the live key from your backend
       const options = {
@@ -87,11 +103,32 @@ function PaymentPage() {
       } else {
         alert("Razorpay SDK not loaded. Please refresh the page.")
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error initiating payment:", error)
-      alert("❌ Failed to initiate payment. Make sure your backend server is running on port 5000.")
+      alert(`❌ Failed to initiate payment: ${error.message}`)
     }
   }
+
+  // Test backend connection
+  const testBackendConnection = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/`, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      })
+      const data = await res.json()
+      console.log("Backend connection test:", data)
+      return true
+    } catch (error: any) {
+      console.error("Backend connection failed:", error)
+      return false
+    }
+  }
+
+  useEffect(() => {
+    testBackendConnection()
+  }, [])
 
   return (
     <div
@@ -103,7 +140,25 @@ function PaymentPage() {
       }}
     >
       <h1>Pay ₹1 using Razorpay</h1>
-      <p>Make sure your backend server is running on port 5000</p>
+      <p>Backend URL: {BACKEND_URL}</p>
+      <p>Make sure your ngrok tunnel is running and pointing to port 5000</p>
+
+      <button
+        onClick={testBackendConnection}
+        style={{
+          padding: "10px 20px",
+          fontSize: "14px",
+          backgroundColor: "#28a745",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          marginRight: "10px",
+        }}
+      >
+        Test Backend Connection
+      </button>
+
       <button
         onClick={handlePayment}
         style={{
