@@ -23,7 +23,7 @@ currency: 'INR',
 name: 'Test Razorpay',
 description: 'Test Transaction',
 order_id: data.id,
-handler: (_response: any) => {
+handler: (response) => {
 alert('Payment Success!');
 navigate('/home');
 },
