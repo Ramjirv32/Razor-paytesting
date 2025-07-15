@@ -14,13 +14,16 @@ interface RazorpayResponse {
 }
 
 function PaymentPage() {
+
+
   const navigate = useNavigate();
 
   const checkPaymentStatus = async (orderId: string) => {
     let retries = 10;
     while (retries > 0) {
       try {
-        const res = await fetch(`https://bluegill-resolved-marginally.ngrok-free.app/check-status/${orderId}`);
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const res = await fetch(`${apiUrl}/check-status/${orderId}`);
         if (!res.ok) throw new Error('Failed to fetch payment status');
         const data = await res.json();
         if (data.status === 'paid') {
@@ -39,7 +42,8 @@ function PaymentPage() {
 
   const handlePayment = async () => {
     try {
-      const res = await fetch('https://bluegill-resolved-marginally.ngrok-free.app/create-order', {
+        const apiUrl = import.meta.env.VITE_API_URL;
+      const res = await fetch(`${apiUrl}/create-order`, {
         method: 'POST',
       });
       if (!res.ok) throw new Error('Failed to create order');
