@@ -15,9 +15,10 @@ const res = await fetch('https://bluegill-resolved-marginally.ngrok-free.app/cre
 method: 'POST',
 });
 const data = await res.json();
-const k = process.env.k;
+const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY;
+
 const options = {
-key: k,
+key: razorpayKey,
 amount: data.amount,
 currency: 'INR',
 name: 'Test Razorpay',
