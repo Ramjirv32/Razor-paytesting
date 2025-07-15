@@ -16,33 +16,58 @@ interface RazorpayResponse {
 function PaymentPage() {
   const navigate = useNavigate();
 
+  const checkPaymentStatus = async (orderId: string) => {
+    let retries = 10;
+    while (retries > 0) {
+      try {
+        const res = await fetch(`https://bluegill-resolved-marginally.ngrok-free.app/check-status/${orderId}`);
+        if (!res.ok) throw new Error('Failed to fetch payment status');
+        const data = await res.json();
+        if (data.status === 'paid') {
+          alert('✅ Payment verified by server');
+          navigate('/home');
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking payment status:', error);
+      }
+      await new Promise((r) => setTimeout(r, 2000)); // wait 2s
+      retries--;
+    }
+    alert('❌ Payment not confirmed');
+  };
+
   const handlePayment = async () => {
-    const res = await fetch('https://bluegill-resolved-marginally.ngrok-free.app/create-order', {
-      method: 'POST',
-    });
+    try {
+      const res = await fetch('https://bluegill-resolved-marginally.ngrok-free.app/create-order', {
+        method: 'POST',
+      });
+      if (!res.ok) throw new Error('Failed to create order');
+      const data = await res.json();
+      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY;
 
-    const data = await res.json();
-    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY;
+      const options = {
+        key: razorpayKey,
+        amount: data.amount,
+        currency: 'INR',
+        name: 'Test Razorpay',
+        description: 'Test Transaction',
+        order_id: data.id,
+        handler: function (response: RazorpayResponse) {
+          alert('✅ Payment initiated. Verifying with server...');
+          checkPaymentStatus(data.id);
+        },
+        theme: {
+          color: '#3399cc',
+        },
+      };
 
-    const options = {
-      key: razorpayKey,
-      amount: '100',
-      currency: 'INR',
-      name: 'Test Razorpay',
-      description: 'Test Transaction',
-      order_id: data.id,
-      handler: function (response: RazorpayResponse) {
-        console.log(response);
-        alert('✅ Payment Successful!');
-        navigate('/home');
-      },
-      theme: {
-        color: '#3399cc',
-      },
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error('Error initiating payment:', error);
+      alert('❌ Failed to initiate payment');
+    }
   };
 
   return (
@@ -69,6 +94,9 @@ export default function App() {
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script); // Clean up script on unmount
+    };
   }, []);
 
   return (
