@@ -19,7 +19,7 @@ function PaymentPage() {
   const navigate = useNavigate()
 
   // Your ngrok URL
-  const BACKEND_URL = "https://bluegill-resolved-marginally.ngrok-free.app"
+  const BACKEND_URL = import.meta.env.VITE_API_URL;
 
   const checkPaymentStatus = async (orderId: string) => {
     let retries = 10
@@ -68,10 +68,10 @@ function PaymentPage() {
 
       const data = await res.json()
       console.log("Order created:", data)
-
+const Razor = import.meta.env.VITE_RAZORPAY_KEY;
       // Use the live key from your backend
       const options = {
-        key: "rzp_live_g3vgHUNX2fyX6l", // Your live key from backend
+        key: Razor, // Your live key from backend
         amount: data.amount,
         currency: "INR",
         name: "Test Razorpay",
