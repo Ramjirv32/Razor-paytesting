@@ -1,4 +1,17 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
 
 function PaymentPage() {
   const navigate = useNavigate();
@@ -9,17 +22,18 @@ function PaymentPage() {
     });
 
     const data = await res.json();
-    const key1 = import.meta.env.VITE_RAZORPAY_KEY;
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY;
 
     const options = {
-      key: key1,
-      amount: data.amount,
+      key: razorpayKey,
+      amount: '100',
       currency: 'INR',
       name: 'Test Razorpay',
       description: 'Test Transaction',
       order_id: data.id,
-      handler: function (response) {
-        alert('Payment Success!');
+      handler: function (response: RazorpayResponse) {
+        console.log(response);
+        alert('✅ Payment Successful!');
         navigate('/home');
       },
       theme: {
@@ -50,6 +64,13 @@ function HomePage() {
 }
 
 export default function App() {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
   return (
     <Router>
       <Routes>
