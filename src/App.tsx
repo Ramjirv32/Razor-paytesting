@@ -54,6 +54,7 @@ function PaymentPage() {
         description: 'Test Transaction',
         order_id: data.id,
         handler: function (response: RazorpayResponse) {
+            console.log(response);
           alert('✅ Payment initiated. Verifying with server...');
           checkPaymentStatus(data.id);
         },
